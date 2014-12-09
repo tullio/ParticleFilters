@@ -1,7 +1,7 @@
 package com.sofken.pf
 
 
-class Particle[A] {
+case class Particle[A]() {
   var p = Seq[A]()
   var dimension:Int = _
   var initValue:A = _  

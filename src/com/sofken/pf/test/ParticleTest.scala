@@ -10,7 +10,7 @@ class ParticleTest {
 
   @Test
   def defaultValueTest {
-    var obj = new Particle[Int]()
+    val obj = new Particle[Int]()
     assertThat(obj, notNullValue())
     assertThat(obj.resize(3), is(3))
     assertThat(obj.dimension, is(3))
@@ -21,8 +21,13 @@ class ParticleTest {
   }
   @Test
   def valuedInitializeTest {
-    var obj = new Particle[Double](3)
+    val obj = new Particle[Double](3)
     val it = obj.p.iterator
     it.foreach(x => assertThat(x, is(0D) ))
+  }
+  @Test
+  def copyTest {
+    val obj = new Particle[String](3)
+    assertThat(obj, notNullValue())
   }
 }
