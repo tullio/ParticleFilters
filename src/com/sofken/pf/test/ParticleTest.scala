@@ -5,6 +5,7 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.core.IsNull.nullValue
 import com.sofken.pf.Particle
 import org.junit.Test
+import scala.Int
 
 class ParticleTest {
 
@@ -29,5 +30,11 @@ class ParticleTest {
   def copyTest {
     val obj = new Particle[String](3)
     assertThat(obj, notNullValue())
+  }
+  @Test
+  def overloadedPlusTest {
+    val obj1 = new Particle[Int](3,1)
+    val obj2 = new Particle[Int](3,2)
+    println((obj1.plus(obj2)).p)
   }
 }
