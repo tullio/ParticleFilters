@@ -6,21 +6,23 @@ import org.hamcrest.core.IsNull.nullValue
 import com.sofken.pf.Particle
 import org.junit.Test
 import scala.Int
-
 import com.sofken.pf.ParticlePlus._
+import com.sofken.pf.Particles
 
-class ParticlesTest {
+class ParticleTest {
 
   @Test
   def defaultValueTest {
-    val obj = new Particle[Int]()
+    val obj = Particles[Int]()
+    println(obj)
     assertThat(obj, notNullValue())
-    assertThat(obj.resize(3), is(3))
-    assertThat(obj.dimension, is(3))
+    assertThat(obj.resize(3, 2, 0), is(3))
+    assertThat(obj.number , is(3))
     val it = obj.p.iterator
-    it.foreach(x => assertThat(x, is(0) ))
-    assertThat(obj.resize(2), is(2))
-    assertThat(obj.dimension, is(2))
+    it.foreach(x => x.p.map(y => assertThat(y, is(0) )))
+    assertThat(obj.resize(2, 2), is(2))
+    assertThat(obj.number, is(2))
+    obj.p.map(x => x.p.map(y =>  assertThat(y, is(0) )))
   }
   @Test
   def valuedInitializeTest {

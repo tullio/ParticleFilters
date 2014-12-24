@@ -1,6 +1,5 @@
 package com.sofken.pf
 
-import scala.reflect.ClassTag
 
 case class Particle[A]() {
   var p = Vector[A]()
