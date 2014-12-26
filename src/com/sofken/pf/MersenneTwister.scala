@@ -4,6 +4,9 @@ package com.sofken.pf
 // Mersenne Twister 19937
 // Based on code from: http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
 // Note: This implementation is not thread-safe!
+import Math.sqrt
+import Math.log
+
 final class MersenneTwister (seed: Int = 5489) {
   private val N = 624
   private val M = 397
@@ -19,6 +22,13 @@ final class MersenneTwister (seed: Int = 5489) {
   mt(0) = seed
   for (i <- 1 until N) mt(i) = (1812433253L * (mt(i - 1) ^ (mt(i - 1) >>> 30)) + i) & 0xffffffffL
 
+  /**
+   * Reset random sequence.
+   */
+  def setSeed(seed: Int) = {
+    mt(0) = seed
+    mti = N + 1
+  }
   // Generates the next random integer in the sequence
   def nextInt(): Int = {
     var y = 0L
@@ -70,5 +80,18 @@ final class MersenneTwister (seed: Int = 5489) {
     val a: Long = (nextInt().toLong & 0xffffffffL) >>> 5
     val b: Long = (nextInt().toLong & 0xffffffffL) >>> 6
     (a * 67108864.0 + b) / 9007199254740992.0
+  }
+  /**
+   * Generate a real number from Gaussian distribution.
+   */
+  def nextNorm(mean:Double, stddev:Double):Double = {
+    var x,y,r = 0.0
+    do {
+      x = 2.0 * nextDouble() - 1.0
+      y = 2.0 * nextDouble() - 1.0
+      r = x * x + y * y
+    } while (r >= 1.0 || r == 0.0)
+    val s = sqrt(-2.0 * log(r) / r)
+    mean + x * s * stddev
   }
 }
