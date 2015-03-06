@@ -2,7 +2,7 @@ package com.sofken.pf
 
 
 case class Particle[A]() {
-  var p = Vector[A]()
+  var p = scala.collection.mutable.ArrayBuffer[A]()
   var dimension:Int = _
   var initValue:A = _  
   def this(dimension:Int) = {
@@ -37,5 +37,20 @@ case class Particle[A]() {
      val obj = Particle[A]()
      obj.p = q
      return obj
+   }
+   def apply(k:Int):A = {
+     p(k)
+   }
+   def update(k:Int, x:A) = {
+     p(k)=x
+   }
+   def iterator() = {
+     p.iterator
+   }
+   def set(x:Particle[A]) = {
+     p = x.p   
+   }
+   def set(x:scala.collection.mutable.ArrayBuffer[A]) = {
+     p = x
    }
 }

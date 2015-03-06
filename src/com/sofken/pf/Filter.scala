@@ -24,7 +24,13 @@ case class Filter() {
     } else {
       x.resize(number, dimension)
       v.resize(number, dimension)
+      alpha.padTo(number, 0.0)
       true
     }
+  }
+  def createSystemNoise(mean:Double, dist:Double):Boolean = {
+    //Range(0, v.p.length - 1).foreach(i => println(v.p(i)))
+    //v.p.foreach(i => Range(0, i.dimension ).foreach(j => {i.p(j) = 0.0}))
+    true
   }
 }

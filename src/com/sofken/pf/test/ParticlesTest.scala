@@ -8,6 +8,7 @@ import org.junit.Test
 import scala.Int
 import com.sofken.pf.ParticlePlus._
 import com.sofken.pf.Particles
+import scala.collection.mutable.ArrayBuffer
 
 class ParticleTest {
 
@@ -18,7 +19,7 @@ class ParticleTest {
     assertThat(obj, notNullValue())
     assertThat(obj.resize(3, 2, 0), is(3))
     assertThat(obj.number , is(3))
-    val it = obj.p.iterator
+    val it = obj.iterator
     it.foreach(x => x.p.map(y => assertThat(y, is(0) )))
     assertThat(obj.resize(2, 2), is(2))
     assertThat(obj.number, is(2))
@@ -26,9 +27,14 @@ class ParticleTest {
   }
   @Test
   def valuedInitializeTest {
-    val obj = new Particle[Double](3)
-    val it = obj.p.iterator
-    it.foreach(x => assertThat(x, is(0D) ))
+    val obj = new Particles[Double]()
+    assertThat(obj, notNullValue())
+    assertThat(obj.resize(3, 2, 0), is(3))
+    assertThat(obj.number , is(3))
+    val it = obj.iterator
+    it.foreach(x => 
+      x.iterator.foreach(y => assertThat(y, is(0D) ))
+      )
   }
   @Test
   def copyTest {
@@ -39,22 +45,49 @@ class ParticleTest {
   def overloadedPlusTest {
     val obj1 = new Particle[Int](3)
     val obj2 = new Particle[Int](3)
-    obj1.p = Vector[Int](1,3,5)
-    obj2.p = Vector[Int](2,4,6)
+    obj1.set(ArrayBuffer[Int](1,3,5))
+    obj2.set(ArrayBuffer[Int](2,4,6))
     println((obj1+obj2).p)
-    assertThat((obj1+obj2).p(0), is(3))
-    assertThat((obj1+obj2).p(1), is(7))
-    assertThat((obj1+obj2).p(2), is(11))
+    assertThat((obj1+obj2).apply(0), is(3))
+    assertThat((obj1+obj2).apply(1), is(7))
+    assertThat((obj1+obj2).apply(2), is(11))
   }
     @Test
   def overloadedDoublePlusTest {
     val obj1 = new Particle[Double](3)
     val obj2 = new Particle[Double](3)
-    obj1.p = Vector[Double](1,3,5)
-    obj2.p = Vector[Double](2,4,6)
+    obj1.p = ArrayBuffer[Double](1,3,5)
+    obj2.p = ArrayBuffer[Double](2,4,6)
     println((obj1+obj2).p)
     assertThat((obj1+obj2).p(0), is(3.0))
     assertThat((obj1+obj2).p(1), is(7.0))
     assertThat((obj1+obj2).p(2), is(11.0))
   }
+    @Test
+    def applyUpdateTest {
+      val obj = new Particles[Double]()
+      val obj1 = new Particle[Double](3)
+      val obj2 = new Particle[Double](3)
+      for(i <- 0 to 2){
+        obj1(i) = i * 2
+        obj2(i) = i * 2 + 1
+      }
+      obj.resize(2, 3)
+      obj(0) = obj1
+      obj(1) = obj2
+      for(i <- 0 to 2){
+        assertThat(obj(0)(i), is(i*2.0))
+        assertThat(obj(1)(i), is(i*2.0 + 1))
+      }
+      for(i <- 0 to 2){
+        obj1(i) = i * 3
+      }
+      obj(0) = obj1
+      for(i <- 0 to 2){
+        assertThat(obj(0)(i), is(i*3.0))
+        assertThat(obj(1)(i), is(i*2.0 + 1))
+      }
+      
+    }
+
 }
