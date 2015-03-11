@@ -1,10 +1,20 @@
 package com.sofken.pf
 
+
 case class Particles[A]() {
   var p = scala.collection.mutable.ArrayBuffer[Particle[A]]()
   var number:Int = _
   var initValue:A = _
-  println(p)
+  def this(x:scala.collection.mutable.ArrayBuffer[Particle[A]]) = {
+    this()
+    number = x.length
+    p = x
+  }
+  def this(number:Int, dimension:Int) = {
+    this()
+    this.number = number
+    resize(number, dimension)
+  }
   def resize(number:Int, dimension:Int, init:A):Int = {
 	  initValue = init
 	  if(number > this.number) {
@@ -32,5 +42,21 @@ case class Particles[A]() {
    }
    def set(x:scala.collection.mutable.ArrayBuffer[Particle[A]]) = {
      p = x
+   }
+   def +(t:Particles[A])(implicit s:ParticleOperator[A]):Particles[A] = {
+//      def +[A](t:Particles[A]):Particles[A] = {
+     println("+++++")
+
+     println(p.zip(t.p).map{
+       case (x:Particle[A], y:Particle[A]) => x.get.zip(y.get).map{
+         case(x:A, y:A)=>s.+(x,y)}
+       }) 
+     new Particles[A](p.zip(t.p).map{
+       case (x:Particle[A], y:Particle[A]) => new Particle[A](x.get.zip(y.get).map{
+         case(a:A, b:A)=>s.+(a,b)})
+       })
+   }
+   def dump:String = {
+     p.iterator.foldLeft("[")((x,y) => x + "," + y) + ",]"
    }
 }

@@ -9,7 +9,7 @@ import scala.Int
 import com.sofken.pf.ParticlePlus._
 import scala.collection.mutable.ArrayBuffer
 
-class ParticlesTest {
+class ParticleTest {
 
   @Test
   def defaultValueTest {
@@ -39,21 +39,22 @@ class ParticlesTest {
     val obj2 = new Particle[Int](3)
     obj1.set(ArrayBuffer[Int](1,3,5))
     obj2.set(ArrayBuffer[Int](2,4,6))
-    println((obj1+obj2).p)
-    assertThat((obj1+obj2).p(0), is(3))
-    assertThat((obj1+obj2).p(1), is(7))
-    assertThat((obj1+obj2).p(2), is(11))
+    println(obj1.dump)
+    println(obj1.+(obj2))
+    assertThat((obj1+obj2).apply(0), is(3))
+    assertThat((obj1+obj2).apply(1), is(7))
+    assertThat((obj1+obj2).apply(2), is(11))
   }
     @Test
   def overloadedDoublePlusTest {
     val obj1 = new Particle[Double](3)
     val obj2 = new Particle[Double](3)
-    obj1.set(ArrayBuffer[Double](1,3,5))
+    obj1.set(ArrayBuffer[Double](1.1,3,5))
     obj2.set(ArrayBuffer[Double](2,4,6))
-    println((obj1+obj2).p)
-    assertThat((obj1+obj2).p(0), is(3.0))
-    assertThat((obj1+obj2).p(1), is(7.0))
-    assertThat((obj1+obj2).p(2), is(11.0))
+    println((obj1+obj2))
+    assertThat((obj1+obj2).apply(0), is(3.1))
+    assertThat((obj1+obj2).apply(1), is(7.0))
+    assertThat((obj1+obj2).apply(2), is(11.0))
   }
     @Test
     def applyTest {
