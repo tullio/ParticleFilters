@@ -12,8 +12,11 @@ case class Particles[A]() {
   }
   def this(number:Int, dimension:Int) = {
     this()
-    this.number = number
     resize(number, dimension)
+  }
+  def this(number:Int, dimension:Int, init:A) = {
+    this()
+    resize(number, dimension, init)
   }
   def resize(number:Int, dimension:Int, init:A):Int = {
 	  initValue = init
@@ -39,9 +42,11 @@ case class Particles[A]() {
    }
       def set(x:Particles[A]) = {
      p = x.p   
+     number = p.length
    }
    def set(x:scala.collection.mutable.ArrayBuffer[Particle[A]]) = {
      p = x
+     number = p.length
    }
    def +(t:Particles[A])(implicit s:ParticleOperator[A]):Particles[A] = {
 //      def +[A](t:Particles[A]):Particles[A] = {

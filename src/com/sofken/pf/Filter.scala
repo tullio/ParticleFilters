@@ -3,7 +3,7 @@ package com.sofken.pf
 case class Filter() {
 
   val x, y, v = Particles[Double]()
-  val alpha= Vector[Double]()
+  var alpha= Vector[Double]()
   var w:Double = _
   var number:Int = _
   var dimension:Int = _
@@ -26,7 +26,8 @@ case class Filter() {
     } else {
       x.resize(number, dimension, init)
       v.resize(number, dimension, init)
-      alpha.padTo(number, 0.0)
+      alpha = alpha.padTo(number, 0.0)
+      println("alpha="+alpha.length)
       return true
     }
   }
@@ -65,10 +66,11 @@ case class Filter() {
   }
   def setObservedData(p: Particles[Double]) = {
     y.set(p)
+    println("set:"+y.dump + " num="+y.number )
   }
   def computLikelihood() = {
     for (i <- 0 to alpha.length - 1) {
-      alpha.updated(i, robserveDensityFunc(robserveFunc(y, x(i)))
+      alpha = alpha.updated(i, robserveDensityFunc(robserveFunc(y, x(i)))
                         * robserveJacobianFunc(y, x(i)))
     }
   }
@@ -79,15 +81,16 @@ case class Filter() {
     var alphaSum = 0.0
     alphaSum = alpha.iterator.reduce((x, y)=> x + y)
     var f = new Particles[Double](number, dimension)
-    var pSuma = Vector[Double](x.number + 1)
-    pSuma.updated(0, 0.0)
-    for(i <- 1 to x.number - 1) {
+    var pSuma = Vector[Double]()
+    pSuma = pSuma :+ 0.0
+    for(i <- 1 to x.number) {
       var s = 0.0
       for(j <- 0 to i - 1) {
         s = s + alpha(j)
       }
-      pSuma.updated(i, s)
+      pSuma = pSuma :+ s
     }
+    println("pSuma="+pSuma)
     for(j <- 0 to x.number - 1) {
       val u = ((j+1)-0.5)/x.number 
       var sampleIndex = -1
