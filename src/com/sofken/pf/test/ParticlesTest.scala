@@ -52,7 +52,7 @@ class ParticlesTest {
       obj1(i).set(ArrayBuffer[Int](1,3,5))
       obj2(i).set(ArrayBuffer[Int](2,4,6))
     }
-    println("example->" + (obj1+obj2).dump)
+    println("example->" + (obj1+obj2).p)
     for(i <- 0 to 1) {
       assertThat((obj1+obj2).apply(i).apply(0), is(3))
       assertThat((obj1+obj2).apply(i).apply(1), is(7))

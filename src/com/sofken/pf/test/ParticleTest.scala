@@ -39,7 +39,7 @@ class ParticleTest {
     val obj2 = new Particle[Int](3)
     obj1.set(ArrayBuffer[Int](1,3,5))
     obj2.set(ArrayBuffer[Int](2,4,6))
-    println(obj1.dump)
+    println(obj1)
     println(obj1.+(obj2))
     assertThat((obj1+obj2).apply(0), is(3))
     assertThat((obj1+obj2).apply(1), is(7))

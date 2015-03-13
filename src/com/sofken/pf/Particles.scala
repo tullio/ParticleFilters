@@ -46,7 +46,6 @@ case class Particles[A]() {
    def +(t:Particles[A])(implicit s:ParticleOperator[A]):Particles[A] = {
 //      def +[A](t:Particles[A]):Particles[A] = {
      println("+++++")
-
      println(p.zip(t.p).map{
        case (x:Particle[A], y:Particle[A]) => x.get.zip(y.get).map{
          case(x:A, y:A)=>s.+(x,y)}
@@ -58,5 +57,5 @@ case class Particles[A]() {
    }
    def dump:String = {
      p.iterator.foldLeft("[")((x,y) => x + "," + y) + ",]"
-   }
+  }
 }
