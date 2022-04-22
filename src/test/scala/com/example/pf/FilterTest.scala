@@ -1,3 +1,4 @@
+package com.example.pf
 import org.scalatest.*
 import flatspec.*
 import matchers.*
@@ -12,9 +13,9 @@ import com.example.pf._
 import com.example.pf.model._
 import com.example.pf.distribution._
 import org.jfree.chart.annotations.XYTextAnnotation
-
+import org.scalatest.tagobjects.CPU
 class FilterTest extends AnyFunSuite:
-  test("Linear Filter Elements") {
+  test("Linear Filter Elements", CPU) {
     val x = Tensor(Array(1.0, 2.0))
     val v = Tensor(Array(3.0, 4.0))
     val systemModel = new LinearGaussianSystemModel(0.0, 1.0)
