@@ -20,6 +20,6 @@ class LinearGaussianTrendObservationModel(mean: Double, sd: Double) extends Obse
     val m = x.length/2
     //h - x
     (h - x(0, m)) ++ Tensor.repeat(0.0, m.toInt)
-  def observationNoiseProbabirity(h: Tensor, x: Tensor): Tensor =
+  def observationNoiseProbability(h: Tensor, x: Tensor): Tensor =
     val v = inversedObservationModel(h, x)
     observationNoise.density(v)

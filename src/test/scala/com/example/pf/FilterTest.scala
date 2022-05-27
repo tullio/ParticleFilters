@@ -14,7 +14,8 @@ import com.example.pf.model._
 import com.example.pf.distribution._
 import org.jfree.chart.annotations.XYTextAnnotation
 import org.scalatest.tagobjects.CPU
-class FilterTest extends AnyFunSuite:
+
+class FilterTest extends AnyFunSuite with gui:
   test("Linear Filter Elements", CPU) {
     val x = Tensor(Array(1.0, 2.0))
     val v = Tensor(Array(3.0, 4.0))
@@ -22,7 +23,7 @@ class FilterTest extends AnyFunSuite:
     val f = systemModel.systemModel(x)
     assert(f.==(Tensor(Array(2.055, 3.466)))(1e-3))
     val inversedObservationModel = new LinearGaussianObservationModel(0.0, 1.0)
-    val g = inversedObservationModel.observationNoiseProbabirity(x, v)
+    val g = inversedObservationModel.observationNoiseProbability(x, v)
     assert(g.==(Tensor(Array(0.053, 0.053)))(1e-3))
   }
   test("Linear Filter Run"){
@@ -60,14 +61,15 @@ class FilterTest extends AnyFunSuite:
   test("Steps 1") {
     val idx = Tensor(Array(0.0, 1.0, 2.0, 3.0))
     val ySeriese = Tensor(Array(1.0, 1.2, 2.0, 0.9))
-    val f = Figure("Particle filter(normal sd)")
-    f.width = 1080
-    val p0 = f.subplot(0)
-    //val p1 = f.subplot(1, 2, 1)
-    p0.legend = true
-
-    p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
-    f.refresh()
+    var p0: Plot = null
+    if enableX11 then
+        val f = Figure("Particle filter(normal sd)")
+        f.width = 1080
+        p0 = f.subplot(0)
+        //val p1 = f.subplot(1, 2, 1)
+        p0.legend = true
+        p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
+        f.refresh()
     val systemModel = new LinearGaussianSystemModel(0.0, 1.0)
     val inversedObservationModel = new LinearGaussianObservationModel(0.0, 1.0)
     val systemNoise = new NormalDistribution(0.0, 1.0)
@@ -76,77 +78,97 @@ class FilterTest extends AnyFunSuite:
     = new ParticleFilter(systemModel,
       inversedObservationModel)
     var x = Tensor.repeat(ySeriese(0), 100)
-    val i = idx.drop(1).iterator
+    val i = idx.drop(1).doubleIterator
     ySeriese.toArray.drop(1).foreach{f =>
       x = filter.step(x, Tensor(Array(f)))
       val t = Tensor.repeat(i.next(), x.length.toInt)
-      p0 += plot(t.toArray, x.toArray, name = "predict", style='.')
+      if enableX11 then
+          p0 += plot(t.toArray, x.toArray, name = "predict", style='.')
     }
-    f.refresh()
+    //f.refresh()
 
 
   }
   test("Steps 2") {
     val idx = Tensor(Array(0.0, 1.0, 2.0, 3.0))
     val ySeriese = Tensor(Array(1.0, 1.2, 2.0, 0.9))
-    val f = Figure("Particle filter(small sd)")
-    f.width = 1080
-    val p0 = f.subplot(0)
-    //val p1 = f.subplot(1, 2, 1)
-    p0.legend = true
-
-    p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
-    f.refresh()
+    var p0: Plot = null
+    if enableX11 then
+        val f = Figure("Particle filter(small sd)")
+        f.width = 1080
+        p0 = f.subplot(0)
+        //val p1 = f.subplot(1, 2, 1)
+        p0.legend = true
+        p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
+        f.refresh()
     val systemModel = new LinearGaussianSystemModel(0.0, 1.0)
     val inversedObservationModel = new LinearGaussianObservationModel(0.0, 0.2)
     val filter = new ParticleFilter(systemModel, inversedObservationModel)
     var x = Tensor.repeat(ySeriese(0), 100)
-    val i = idx.drop(1).iterator
+    val i = idx.drop(1).doubleIterator
     ySeriese.toArray.drop(1).foreach{f =>
       x = filter.step(x, Tensor(Array(f)))
       val t0 = i.next()
       val t = Tensor.repeat(t0, x.length.toInt)
-      p0 += plot(t.toArray, x.toArray, name = "predict particle", style='.')
       val predict = x.mean(0)
-      p0 += plot(Array(t0), Array(predict), name = "predict value", style='+', colorcode="[255,0,0]")
+      if enableX11 then
+          p0 += plot(t.toArray, x.toArray, name = "predict particle", style='.')
+          p0 += plot(Array(t0), Array(predict), name = "predict value", style='+', colorcode="[255,0,0]")
       //println(s"mean=${predict}")
       val a = filter.logLikelihood
       println(s"logLikelyhood=${a}")
 
     }
-    f.refresh()
+    //f.refresh()
 
 
   }
   test("Parameter Tuning") {
-    val idx = Tensor(Array(0.0, 1.0, 2.0, 3.0))
-    val ySeriese = Tensor(Array(1.0, 1.2, 2.0, 0.9))
-    //f.refresh()
+    //val idx = Tensor(Array(0.0, 1.0, 2.0, 3.0))
+    val idx = Tensor(Array(0.0, 1.0, 2.0))
+    //val ySeriese = Tensor(Array(1.0, 1.2, 2.0, 0.9))
+    //val ySeriese = Tensor(Array(1.0, 1.2, 1.3, 0.9))
+    val ySeriese = Tensor(Array(1.0, 2.5, 2.3))
+    var f: Figure = null
+    var p0: Plot = null
+    if enableX11 then
+      f = Figure(s"Particle filter")
+      f.width = 1480
+      f.height = 740
+
+    val systemNoiseParameterRange = 2
+    val observationNoiseParameterRange = 2
+
     for
-      i <- Range(0, 3, 2)
-      j <- Range(0, 3, 2)
+      i <- Range(-systemNoiseParameterRange, systemNoiseParameterRange, 2)
+
+      j <- Range(-observationNoiseParameterRange, observationNoiseParameterRange, 1)
     do
-      val a = math.pow(2.0, -i)
-      val b = math.pow(2.0, -j)
-      val f = Figure(s"Particle filter(a=${a}, b=${b})")
-      f.width = 1080
-      val p0 = f.subplot(0)
-      //val p1 = f.subplot(1, 2, 1)
-      p0.legend = true
-      p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
+      val a = math.pow(2.0, i) // variance of noise of the system model
+      val b = math.pow(2.0, j) // variance of noise of the observation model
+      println(s"========================================== (a=${a}, b=${b})")
+      if enableX11 then
+        p0 = f.subplot(systemNoiseParameterRange*2, observationNoiseParameterRange*2,
+          (i+systemNoiseParameterRange)*(observationNoiseParameterRange*2)+(j+observationNoiseParameterRange))
+        //p0.title = s"a=${a}, b=${b}"
+        //val p1 = f.subplot(1, 2, 1)
+        p0.legend = true
+        p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
       val systemModel = new LinearGaussianSystemModel(0.0, a)
       val inversedObservationModel = new LinearGaussianObservationModel(0.0, b)
       val filter = new ParticleFilter(systemModel, inversedObservationModel)
-      var x = Tensor.repeat(ySeriese(0), 100)
-      val it = idx.drop(1).iterator
+      filter.debug = true
+      var x = Tensor.repeat(ySeriese(0), 10)
+      val it = idx.drop(1).doubleIterator
       var likelihood = 0.0
       ySeriese.toArray.drop(1).foreach { f =>
         x = filter.step(x, Tensor(Array(f)))
         val t0 = it.next()
         val t = Tensor.repeat(t0, x.length.toInt)
-        p0 += plot(t.toArray, x.toArray, name = "predict particle", style = '.')
         val predict = x.mean(0)
-        p0 += plot(Array(t0), Array(predict), name = "predict value", style = '+', colorcode = "[255,0,0]")
+        if enableX11 then
+          p0 += plot(t.toArray, x.toArray, name = "predict particle", style = '.')
+          p0 += plot(Array(t0), Array(predict), name = "predict value", style = '+', colorcode = "[255,0,0]")
         //println(s"mean=${predict}")
         val l = filter.logLikelihood
         //println(s"logLikelyhood=${l}(a=${a}, b=${b})")
@@ -156,6 +178,9 @@ class FilterTest extends AnyFunSuite:
       val text = s"logLikelyhood=${likelihood}(a=${a}, b=${b})"
       val annotation = new XYTextAnnotation(text, 500, 500)
       annotation.setFont(annotation.getFont().deriveFont(24f))
-      p0.plot.addAnnotation(annotation)
-      //f.refresh()
+      if enableX11 then
+        p0.title = s"a=${a}, b=${b}, l=${likelihood}"
+        p0.plot.addAnnotation(annotation)
+    //f.refresh()
   }
+

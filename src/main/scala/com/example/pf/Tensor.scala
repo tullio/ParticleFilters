@@ -12,7 +12,8 @@ import scala.reflect.ClassTag
 
 class Tensor:
   var x: INDArray = _
-  class TensorItetator extends Iterator[Double]:
+  var outputNewLine = true
+  class DoubleItetator extends Iterator[Double]:
     private var current = 0
     override def hasNext: Boolean = current < x.length
     override def next(): Double =
@@ -22,11 +23,32 @@ class Tensor:
         t
       else
         0.0
-  def iterator =
+  def doubleIterator =
+    new DoubleItetator
+  class TensorItetator extends Iterator[Tensor]:
+    private var current = 0
+    override def hasNext: Boolean = current < x.length
+    override def next(): Tensor =
+      if hasNext then
+        val t = Tensor(x.getRow(current.toLong))
+        current += 1
+        t
+      else
+        Tensor()
+  def tensorIterator =
     new TensorItetator
+
+  // 1D ------------------------------------
+  @targetName("create_from_varargs")
+  def create(in: Double*) =
+    x = Nd4j.create(in.toArray)
+    this
 
   @targetName("create_array")
   def create(in: Array[Double]) =
+    x = Nd4j.create(in)
+    this
+  def create(in: Array[Array[Double]]) =
     x = Nd4j.create(in)
     this
   @targetName("create_seq")
@@ -36,8 +58,39 @@ class Tensor:
   def create(in: INDArray) =
     x = in.dup()
     this
+  @targetName("create_by_shape")
+  def create(in: Seq[Seq[Double]]) =
+    println(s"in=${in}")
+    x = Nd4j.create(in.map(f => f.toArray).toArray)
+    println(s"x=${x}")
+    this
   def create(shape: Int*) =
     x = Nd4j.create(shape*)
+    this
+
+  def shape =
+    x.shape
+
+  def reshape(shape: Int*) =
+    x = x.reshape(shape.toArray)
+    this
+  /**
+   * In 1-dimensional case, an input 1-D tensor is appended to the original
+   * 1-D tensor. In 2-dimensional case, an input 1-D tensor is appended to the
+   * original 2-D tensor.
+   * @param in Tensor to be appended
+   * @return this
+   */
+  def push(in: Tensor) =
+    x = x.shape.length match
+
+      case 1 =>
+        Nd4j.hstack(x, in.x)
+      case 2 =>
+        println(x)
+        println(in.x.reshape(1, in.x.length))
+        Nd4j.vstack(x, in.x.reshape(1, in.x.length))
+
     this
   def cummulativeValues() =
     val n = x.length
@@ -50,8 +103,17 @@ class Tensor:
     Tensor(cumulativeWeight.toArray)
   def indexWhere(f: Double => Boolean) =
     x.toDoubleVector.indexWhere(f)
+
+  // for 1D and 2D
   def map(f: Double => Double) =
-    Tensor(x.toDoubleVector.map(f))
+    x.shape.length match
+        case 1 =>
+            Tensor(Nd4j.create(x.toDoubleVector.map(f)))
+        case 2 =>
+            Tensor(Nd4j.create(x.toDoubleMatrix.map(g => g.map(f))))
+
+
+
   def filter(f: Double => Boolean) =
     Tensor(x.toDoubleVector.filter(f))
   def drop(n: Int) =
@@ -74,13 +136,33 @@ class Tensor:
     val buckets = Range(0, nbin).map(f => if(bucketsMap.isDefinedAt(f)) bucketsMap(f).length else 1)
     (Tensor(bins.toArray), Tensor(buckets.toArray))
   override def toString(): String =
+    val shape = x.shape()
     var out = "["
-    for
-      i <- Range(0, x.length.toInt)
-    do
-      out = out + x.get(NDArrayIndex.point(i))
-      if i < x.length.toInt - 1 then
-        out = out + ", "
+    shape.length match
+      case 1 =>
+        for
+          i <- Range(0, x.length.toInt)
+        do
+          out = out + x.get(NDArrayIndex.point(i))
+          if i < x.length.toInt - 1 then
+            out = out + ", "
+
+      case 2 =>
+        for
+          i <- Range(0, shape(0).toInt)
+        do
+          out = out + "["
+          for
+            j <- Range(0, shape(1).toInt)
+          do
+            out = out + x.get(NDArrayIndex.point(i), NDArrayIndex.point(j))
+            if j < shape(1) - 1 then
+              out = out + ", "
+          out = out + "]"
+          if i < shape(0) - 1 then
+            out = out + ", "
+            if outputNewLine then
+              out = out + "\n"
     out = out + "]"
     out
   def ==(y: Tensor)(implicit eps: Double = 1e-8): Boolean =
@@ -95,6 +177,7 @@ class Tensor:
   def apply(a: Int, b: Int): Tensor = Tensor(x.get(NDArrayIndex.interval(a,b)))
   def apply(i: Long) = x.getDouble(i)
   def apply(i: Int) = x.getDouble(i.toLong)
+
 
 extension (x: Tensor)
   def +(y: Tensor): Tensor = Tensor(x.x.add(y.x))
@@ -115,9 +198,21 @@ given Tensor2Array: Conversion[Tensor, Array[Double]] with
 
 
 object Tensor:
+  // 1D --------------------------------
   def apply(x: Array[Double]) =
     val t = new Tensor()
     t.create(x)
+  // 2D --------------------------------
+  def apply(x: Array[Array[Double]]) =
+    val t = new Tensor()
+    t.create(x)
+
+  @targetName("apply_from_varargs")
+  def apply(x: Double*) =
+    val t = new Tensor()
+    t.create(x)
+
+  @targetName("apply_from_seq")
   def apply(x: Seq[Double]) =
     val t = new Tensor()
     t.create(x)
@@ -130,6 +225,10 @@ object Tensor:
   def create(shape: Int*) =
     val t = new Tensor()
     t.create(shape*)
+  // 2D --------------------------------
+  def apply(x: Seq[Seq[Double]]) =
+    val t = new Tensor()
+    t.create(x)
   def linspace(start: Double, end: Double, step: Double = 1.0) =
     val num: Long = ((end - start)/step + 1).toLong
     val t = new Tensor()
@@ -137,6 +236,12 @@ object Tensor:
   def repeat(x: Double, n: Int) =
     val t = new Tensor()
     t.create(Nd4j.repeat(Nd4j.create(Array(x)), n).toDoubleVector)
+  def repeat(x: Tensor, n: Int) =
+    val t = new Tensor()
+    t.create(Nd4j.repeat(x.x, n))
+
+  def empty =
+    new Tensor()
 
 
 

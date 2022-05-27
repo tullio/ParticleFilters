@@ -6,7 +6,7 @@ import com.example.pf.Tensor
  * @param systemModel
  * @param observationModel
  */
-class ParticleFilter(systemModel: SystemModel,
+class ParticleFilter(var systemModel: SystemModel,
                      observationModel: ObservationModel):
   val resampling = Resampling()
   val xSeriese = scala.collection.mutable.ListBuffer.empty[Tensor]
@@ -33,16 +33,28 @@ class ParticleFilter(systemModel: SystemModel,
       println(s"f(${f.length})=${f} (ParticleFilter)")
     var newParticle: Tensor = new Tensor()
     if predictOnly == false then
-      weight = observationModel.observationNoiseProbabirity(y, f)
+      weight = observationModel.observationNoiseProbability(y, f)
       if debug then
-        println(s"y(${y.length})=${y} (ParticleFilter)")
-        println(s"a(${weight.length})=${weight} (ParticleFilter)")
+        println(s"observation(${y.length})=${y} (ParticleFilter)")
+        println(s"weight(${weight.length})=${weight} (ParticleFilter)")
+        println(s"local logLikelihood=${logLikelihood}")
       newParticle = resampling.systematicResampling(f, weight)
     else
       newParticle = f
     newParticle
   def logLikelihood: Double =
-    math.log(weight.sum)/m
+    if debug then
+        println(s"log(${weight.sum}/${m}=${math.log(weight.sum/m)})")
+    math.log(weight.sum/m)
+
+  def getSystemModel =
+    systemModel
+
+  def getObservationModel =
+    observationModel
+  def setSystemModel(model: SystemModel) =
+    systemModel = model
+    this
 
 
 
