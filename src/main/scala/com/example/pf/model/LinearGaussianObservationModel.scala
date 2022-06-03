@@ -12,8 +12,10 @@ class LinearGaussianObservationModel(mean: Double, sd: Double) extends Observati
   val observationNoise = new NormalDistribution(mean, sd)
   println(s"NormalDistribution(${mean}, ${sd})")
   def inversedObservationModel(h: Tensor, x: Tensor): Tensor =
-    h - x
+      h - x
   def observationNoiseProbability(h: Tensor, x: Tensor): Tensor =
-    val v = inversedObservationModel(h, x)
-    //println(s"diff between hidden variable and observation=${v}")
-    observationNoise.density(v)
+      val v = inversedObservationModel(h, x)
+      //println(s"diff between hidden variable and observation=${v}")
+      observationNoise.density(v)
+  override def toString() =
+      s"LinearGaussianObservationModel(${mean}, ${sd})"

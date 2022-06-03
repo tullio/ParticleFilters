@@ -38,8 +38,9 @@ class DataStreamSpec extends AnyFunSuite with gui:
       assert(ds != null)
       ds.push(Tensor(Array(0.0)), Tensor(Array(0.0)))
       ds.push(Tensor(Array(1.0)), Tensor(Array(1.0)))
-      ds.push(Tensor(Array(2.0)), Tensor(Array(0.5)))
-      assert(ds.dataStream == Tensor(Array(Array(0.0), Array(1.0), Array(0.5))))
-      assert(ds.timeStream == Tensor(Array(Array(0.0), Array(1.0), Array(2.0))))
-
+      ds.push(Tensor(Array(2.0)), Tensor(Array(4.0)))
+      ds.push(Tensor(Array(3.0)), Tensor(Array(0.5)))
+      assert(ds.dataStream == Tensor(Array(Array(0.0), Array(1.0), Array(4.0), Array(0.5))))
+      assert(ds.timeStream == Tensor(Array(Array(0.0), Array(1.0), Array(2.0), Array(3.0))))
+      ds.tuning
   }
