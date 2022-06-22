@@ -13,30 +13,35 @@ import scala.reflect.ClassTag
 class Tensor:
   var x: INDArray = _
   var outputNewLine = true
-  class DoubleItetator extends Iterator[Double]:
-    private var current = 0
-    override def hasNext: Boolean = current < x.length
-    override def next(): Double =
-      if hasNext then
-        val t = x.getDouble(current.toLong)
-        current += 1
-        t
-      else
-        0.0
   def doubleIterator =
-    new DoubleItetator
-  class TensorItetator extends Iterator[Tensor]:
-    private var current = 0
-    override def hasNext: Boolean = current < x.length
-    override def next(): Tensor =
-      if hasNext then
-        val t = Tensor(x.getRow(current.toLong))
-        current += 1
-        t
-      else
-        Tensor()
+      class DoubleItetator extends Iterator[Double]:
+        private var current = 0
+        override def hasNext: Boolean = current < x.length
+        override def next(): Double =
+          if hasNext then
+            val t = x.getDouble(current.toLong)
+            current += 1
+            t
+          else
+            0.0
+      new DoubleItetator
   def tensorIterator =
-    new TensorItetator
+      class TensorItetator extends Iterator[Tensor]:
+        private var current = 0L
+        private var currentTensor = Tensor(x.getRow(current))
+        def value = x
+        override def hasNext: Boolean = 
+          //println(s"current=${current}, length=${x.shape()(0)}")
+          current < x.shape()(0)
+        override def next(): Tensor =
+          if hasNext then
+            currentTensor.x = x.getRow(current.toLong)
+            current += 1
+            //println(s"return=${currentTensor}")
+            currentTensor
+          else
+            currentTensor
+      new TensorItetator
 
   // 1D ------------------------------------
   @targetName("create_from_varargs")
@@ -78,6 +83,7 @@ class Tensor:
    * In 1-dimensional case, an input 1-D tensor is appended to the original
    * 1-D tensor. In 2-dimensional case, an input 1-D tensor is appended to the
    * original 2-D tensor.
+    * The context "x" is replaced.
    * @param in Tensor to be appended
    * @return this
    */
@@ -85,13 +91,28 @@ class Tensor:
     x = x.shape.length match
 
       case 1 =>
+        println(s"push ${x} into ${in.x}")
         Nd4j.hstack(x, in.x)
       case 2 =>
-        println(x)
-        println(in.x.reshape(1, in.x.length))
         Nd4j.vstack(x, in.x.reshape(1, in.x.length))
 
     this
+  /**
+    * The context "x" is replaced.
+    * @param in Array represents 1xlength Tensor
+    * @return this
+    * */
+  def push(in: Array[Double]) =
+      x = Nd4j.vstack(x, Tensor(in).x.reshape(in.length, 1))
+      this
+  /**
+    * An input parameter is regarded as a series of 1-D tensor.
+    * The context "x" is replaced.
+    * */
+  def multiplePush(in: Tensor) =
+      x = Nd4j.vstack(x, in.x.reshape(in.x.length, 1))
+      this
+      
   def cummulativeValues() =
     val n = x.length
     val cumulativeWeight = scala.collection.mutable.ListBuffer.empty[Double]
@@ -118,6 +139,9 @@ class Tensor:
     Tensor(x.toDoubleVector.filter(f))
   def drop(n: Int) =
     Tensor(x.toDoubleVector.drop(n))
+  def take(n: Int) =
+    Tensor(x.toDoubleVector.take(n))
+
   def toArray =
     x.toDoubleVector
   def floor =
@@ -177,7 +201,10 @@ class Tensor:
   def apply(a: Int, b: Int): Tensor = Tensor(x.get(NDArrayIndex.interval(a,b)))
   def apply(i: Long) = x.getDouble(i)
   def apply(i: Int) = x.getDouble(i.toLong)
-
+  def update(idx: Int, v: Double) =
+      x.putScalar(idx.toLong, v)
+  def getColumn(i: Int) = Tensor(x.getColumn(i))
+  def dup = Tensor(x)
 
 extension (x: Tensor)
   def +(y: Tensor): Tensor = Tensor(x.x.add(y.x))
@@ -222,6 +249,8 @@ object Tensor:
   def apply(x: INDArray) =
     val t = new Tensor()
     t.create(x)
+
+    
   def create(shape: Int*) =
     val t = new Tensor()
     t.create(shape*)

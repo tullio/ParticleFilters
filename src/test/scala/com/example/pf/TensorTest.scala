@@ -119,6 +119,7 @@ class TensorTest extends AnyFunSuite:
       val v = it.next()
       val v2 = it2.next()
       assert(v == v2)
+      assert(a == Tensor(b))
 
     val e = Tensor(Array(1.4))
     //println(s"original=${c}")
@@ -127,9 +128,24 @@ class TensorTest extends AnyFunSuite:
     assert(d.==(Tensor(Array(1.3, 1.3, 1.3, 1.4))))
     val f = Tensor.repeat(e, 3)
     assert(f == Tensor(Array(Array(1.4), Array(1.4), Array(1.4))))
+    assert(f.push(Array(1.5, 1.6)) == Tensor(Array(Array(1.4), Array(1.4), Array(1.4), Array(1.5), Array(1.6))))
+    assert(f.multiplePush(Tensor(Array(1.5, 1.6))) == Tensor(Array(Array(1.4), Array(1.4), Array(1.4), Array(1.5), Array(1.6), Array(1.5), Array(1.6))))
+
+
   }
   test("basic procedures can be executed") {
+    val in = Tensor(Array(Array(1.0), Array(1.1), Array(2.0), Array(2.1))) 
+    val a = in.tensorIterator
+    assert(in == Tensor(Array(Array(1.0), Array(1.1), Array(2.0), Array(2.1))) )
+    assert(a.next() == Tensor(1.0))
+    assert(in == Tensor(Array(Array(1.0), Array(1.1), Array(2.0), Array(2.1))) )
+    assert(a.next() == Tensor(1.1))
+    assert(a.next() == Tensor(2.0))
+    assert(a.next() == Tensor(2.1))
+    assert(a.hasNext == false)
     val c = Tensor(Array(Array(1.0, 1.1), Array(2.0, 2.1)))
     val iter = c.tensorIterator
     assert(iter.next() == Tensor(1.0, 1.1))
+    assert(iter.next() == Tensor(2.0, 2.1))
+    assert(iter.hasNext == false)
   }
