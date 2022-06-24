@@ -65,12 +65,13 @@ class Tensor:
     this
   @targetName("create_by_shape")
   def create(in: Seq[Seq[Double]]) =
-    println(s"in=${in}")
+    //println(s"in=${in}")
     x = Nd4j.create(in.map(f => f.toArray).toArray)
-    println(s"x=${x}")
+    //println(s"x=${x}")
     this
   def create(shape: Int*) =
-    x = Nd4j.create(shape*)
+    //x = Nd4j.create(shape*, DataType.DOUBLE)
+    x = Nd4j.create(shape.toArray, DataType.DOUBLE)
     this
 
   def shape =
@@ -88,10 +89,11 @@ class Tensor:
    * @return this
    */
   def push(in: Tensor) =
+    //println(s"push ${x}(${x.shape.toSeq}; ${x.dataType}) into ${in.x}(${in.x.shape.toSeq}; ${in.x.dataType})")
     x = x.shape.length match
 
       case 1 =>
-        println(s"push ${x} into ${in.x}")
+        //println(s"push ${x} into ${in.x}")
         Nd4j.hstack(x, in.x)
       case 2 =>
         Nd4j.vstack(x, in.x.reshape(1, in.x.length))
@@ -204,6 +206,7 @@ class Tensor:
   def update(idx: Int, v: Double) =
       x.putScalar(idx.toLong, v)
   def getColumn(i: Int) = Tensor(x.getColumn(i))
+  def getRow(i: Int) = Tensor(x.getRow(i.toLong))
   def dup = Tensor(x)
 
 extension (x: Tensor)

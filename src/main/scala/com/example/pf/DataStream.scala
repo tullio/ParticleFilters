@@ -2,6 +2,7 @@ package com.example.pf
 
 import breeze.plot.{Figure, Plot, plot}
 import com.example.pf.model.{LinearGaussianObservationModel, LinearGaussianSystemModel}
+import com.example.pf.model.LinearCauchySystemModel
 import com.example.pf.model.{SystemModel, ObservationModel}
 import scala.collection.mutable.ListBuffer
 import org.tinylog.Logger
@@ -66,8 +67,9 @@ class DataStream:
     def tuning =
         //val systemNoiseParameterRange = 3
         //val observationNoiseParameterRange = 2
-        //val systemNoiseParameterRange = Array(0.6)
-        val systemNoiseParameterRange = Array(0.7)
+        //val systemNoiseParameterRange = Array(0.8, 1.0, 1.2)
+        val systemNoiseParameterRange = Array(3.0)
+        //val systemNoiseParameterRange = Array(0.01)
         //val observationNoiseParameterRange = Array(2.0, 6.0, 8.0)
         val observationNoiseParameterRange = Array(8.0)
         var f: Figure = null
@@ -104,6 +106,7 @@ class DataStream:
 
           Logger.debug("a={}, b={}", a, b)
           val systemModel = LinearGaussianSystemModel(0.0, a)
+          //val systemModel = LinearCauchySystemModel(0.0, a)
           val inversedObservationModel = LinearGaussianObservationModel(0.0, b)
           val filter = ParticleFilter(systemModel, inversedObservationModel)
           filter.debug = true
@@ -125,7 +128,10 @@ class DataStream:
               if completeTime == t0(0) then
                   if completeTime.toInt % (60*120) == 0 then
                       Logger.debug("completeTime={}, t0={}(predictOnly=false interval)", completeTime, t0(0))
+                      Logger.debug("x={}, y={}. lets filtering", x, y)
                   x = filter.step(x, y)
+                  if completeTime.toInt % (60*120) == 0 then
+                      Logger.debug("now x={}.", x)
                   if x != null then
                       val t = Tensor.repeat(t0, x.length.toInt)
                       val predict = x.mean
@@ -140,10 +146,21 @@ class DataStream:
                   else // Illegal case
                       Logger.error("filter step was failed: x={}", x)
               else
+                  if completeTime.toInt % (60*120) == 0 then
+                      Logger.debug("completeTime={}, t0={}", completeTime, t0)
                   while completeTime != t0(0) do
+                      //Logger.debug("completeTime={}, t0={}", completeTime, t0)
+                      if completeTime.toInt % (60*5) == 0 then
+                          if completeTime.toInt % (60*120) == 0 then
+                              Logger.debug("completeTime={}, t0={}(predictOnly interval; but proceeds resampling!)", completeTime, t0(0))
+                          x = filter.step(x, y)
+                      else
+                          if completeTime.toInt % (60*120) == 0 then
+                              Logger.debug("completeTime={}, t0={}(predictOnly interval)", completeTime, t0(0))
+                              Logger.debug("x={}, y={}. lets filtering with predictOnly", x, y)
+                          x = filter.step(x, y, predictOnly = true)
                       if completeTime.toInt % (60*120) == 0 then
-                          Logger.debug("completeTime={}, t0={}(predictOnly interval)", completeTime, t0(0))
-                      x = filter.step(x, y, predictOnly = true)
+                          Logger.debug("now x={}.", x)
                       if x != null then
                           val t = Tensor.repeat(completeTime, x.length.toInt)
                           val predict = x.mean
