@@ -27,7 +27,9 @@ lazy val root = project
     libraryDependencies += "org.tinylog" % "tinylog" % "1.3.6",
     libraryDependencies += "org.tinylog" % "tinylog-api" % "2.1.2",
     libraryDependencies += "org.tinylog" % "tinylog-impl" % "2.1.2",
-
+    libraryDependencies += "com.electronwill.night-config" %  "toml" % "3.6.5",
+    libraryDependencies += ("com.github.pathikrit" %% "better-files" % "3.9.1").cross(CrossVersion.for3Use2_13),
+    libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.30.0",
 
   )
 assemblyMergeStrategy in assembly := {
