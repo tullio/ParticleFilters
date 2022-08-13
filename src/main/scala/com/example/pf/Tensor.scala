@@ -5,7 +5,7 @@ import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.indexing.NDArrayIndex
 import org.nd4j.linalg.indexing.conditions.EpsilonEquals
-
+import org.tinylog.Logger
 import scala.annotation.targetName
 import scala.math
 import scala.reflect.ClassTag
@@ -155,9 +155,9 @@ class Tensor:
     val min = math.min(sorted.head, lower)
     val max = math.max(sorted.last, upper)
     val binLength = (max - min) / nbin + Epsilon
-    println("binLength="+binLength)
+    //println("binLength="+binLength)
     val bins = Range(0, nbin).map(f => f*binLength + min)
-    println("bins="+bins)
+    //println("bins="+bins)
     val bucketsMap = sorted.map(f => ((f-min)/binLength).toInt).groupBy(f => f)
     val buckets = Range(0, nbin).map(f => if(bucketsMap.isDefinedAt(f)) bucketsMap(f).length else 1)
     (Tensor(bins.toArray), Tensor(buckets.toArray))
