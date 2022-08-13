@@ -4,20 +4,20 @@ import scala.util.Random
 class Resampling(seed: Int = 0):
   val rnd = new Random(seed)
   def multinomialResampling(x: Tensor, w: Tensor) =
-    println("input="+w)
+    //println("input="+w)
     val total = w.sum
-    println("total="+total)
+    //println("total="+total)
     val n = w.length
-    println("cummulativeValues="+w.cummulativeValues())
+    //println("cummulativeValues="+w.cummulativeValues())
     val cumulativeWeight = w.cummulativeValues()/total
-    println(f"cumulativeWeight=${cumulativeWeight}")
+    //println(f"cumulativeWeight=${cumulativeWeight}")
     val samplingMap = x.map{
       f =>
         val r = Random.nextDouble()
         val index = cumulativeWeight.indexWhere(g => g > r)
         index
     }
-    println("samplingMap="+samplingMap)
+    //println("samplingMap="+samplingMap)
     val p = samplingMap.map{
       f => x(f.toLong)
     }
@@ -42,41 +42,41 @@ class Resampling(seed: Int = 0):
     val total = w.sum
     val n = w.length
     val normalizedWeight = w.map(f => f/total)
-    println(s"normalized weights = ${normalizedWeight}")
+    //println(s"normalized weights = ${normalizedWeight}")
     val replicationFactor = (normalizedWeight * n).floor
-    println(s"replication factors = ${replicationFactor}")
+    //println(s"replication factors = ${replicationFactor}")
     val modifiedWeight = normalizedWeight - replicationFactor/n
-    println(s"modified weights = ${modifiedWeight}")
+    //println(s"modified weights = ${modifiedWeight}")
     val temporalLength = replicationFactor.sum
-    println(s"sum of replication factor = ${temporalLength}")
+    //println(s"sum of replication factor = ${temporalLength}")
     var samplingMap = scala.collection.mutable.ListBuffer.empty[Int]
     val replicationMap = replicationFactor.toArray.zipWithIndex.filter(f => f._1>0.0)
-    println(s"replicationMap = ${replicationMap.toSeq}")
+    //println(s"replicationMap = ${replicationMap.toSeq}")
     replicationMap.foreach{f =>
       Range(0, f._1.toInt /* replication factor */).foreach{g =>
         samplingMap.append(f._2 /* index */)
       }
     }
-    println(s"1st samplingMap = ${samplingMap.toSeq}")
+    //println(s"1st samplingMap = ${samplingMap.toSeq}")
     val p = Tensor(samplingMap.map{
       f => x(f.toLong)
     }.toArray)
-    println(s"1st results = ${p}")
+    //println(s"1st results = ${p}")
     val (residualX, residualWeight) = x.toArray.zip(modifiedWeight.toArray).filter(f => f._2 > 0.0)
       .sortBy(f => f._2)
       .take((n-temporalLength).toInt)
       .unzip
-    println(s"residual x = ${residualX.toSeq}")
-    println(s"residual weights = ${residualWeight.toSeq}")
+    //println(s"residual x = ${residualX.toSeq}")
+    //println(s"residual weights = ${residualWeight.toSeq}")
     val r = multinomialResampling(Tensor(residualX), Tensor(residualWeight))
-    println(s"2nd results = ${r}")
-    println(s"final results = ${p ++ r}")
+    //println(s"2nd results = ${r}")
+    //println(s"final results = ${p ++ r}")
     p ++ r
   def stratifiedResampling(x: Tensor, w: Tensor) =
     val total = w.sum
     val n = w.length
     val cumulativeWeight = w.cummulativeValues()/total
-    println(f"cumulativeWeight=${cumulativeWeight}")
+    //println(f"cumulativeWeight=${cumulativeWeight}")
       val samplingMap = Tensor(Range(0, n.toInt).toArray).map{
       f =>
         val r0 = rnd.nextDouble() * 1.0/n
