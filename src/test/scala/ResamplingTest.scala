@@ -10,6 +10,7 @@ import org.nd4j.linalg.indexing.NDArrayIndex
 import breeze.plot.*
 import com.example.pf._
 import com.example.pf.distribution._
+import org.tinylog.Logger
 class ResamplingTest extends AnyFunSuite:
   test("Multinomial com.example.pf.Resampling"){
     val idx = Tensor.linspace(-2, 2, 0.001)
@@ -87,10 +88,10 @@ class ResamplingTest extends AnyFunSuite:
     f.width= 1080
     val p0 = f.subplot(0)
     val p1 = f.subplot(1, 2, 1)
-    println(s"index=${idx.toArray.toSeq}")
-    println(s"input=${x.toArray.toSeq}")
-    println(s"probability density=${w.toArray.toSeq}")
-    println(s"resampled values = ${resampled.toArray.toSeq}")
+    //println(s"index=${idx.toArray.toSeq}")
+    //println(s"input=${x.toArray.toSeq}")
+    //println(s"probability density=${w.toArray.toSeq}")
+    //println(s"resampled values = ${resampled.toArray.toSeq}")
     p0.legend = true
     p1.legend = true
     p0 += plot(idx.toArray, w.toArray, name="probability density")

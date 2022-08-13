@@ -50,6 +50,7 @@ class DataStreamSpec extends AnyFunSuite with gui:
       ds.timeDataStream.push(Tensor(Array(3.0)), Tensor(Array(0.5)))
       assert(ds.timeDataStream.data == Tensor(Array(Array(0.0), Array(1.0), Array(4.0), Array(0.5))))
       assert(ds.timeDataStream.time == Tensor(Array(Array(0.0), Array(1.0), Array(2.0), Array(3.0))))
+      ds.completeTimeSeries = Tensor(Array(0.0, 1.0, 2.0, 3.0))
       ds.tuning
   }
   test("sampling should be performed") {

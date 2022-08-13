@@ -10,6 +10,7 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.*
+import org.tinylog.Logger
 
 class TensorTest extends AnyFunSuite:
   test("1d basic operation can be executed"){
@@ -18,12 +19,13 @@ class TensorTest extends AnyFunSuite:
     assert(x(0) == 1.0)
     assert(x(1) == 2.0)
     assert(x.length == 2)
-    assert(x.map(f => f+1).toString() == "[2.0000, 3.0000]")
+    assert(x.map(f => f+1) == Tensor(Array(2.0000, 3.0000)))
     val y = Tensor(Nd4j.create(Array(2.0, 3.0)))
     assert(y.toString() == "[2.0000, 3.0000]")
     val z = x + y
     println(z.toString() == "[3.0000, 5.0000]")
     val z1 = x + 1
+    Logger.debug("z1={}", z1)
     assert(z1.toString() == "[2.0000, 3.0000]")
     val z2 = x - y
     assert(z2.toString() == "[-1.0000, -1.0000]")
