@@ -7,7 +7,8 @@ import com.example.pf.model.{SystemModel, ObservationModel}
 import scala.collection.mutable.ListBuffer
 import org.tinylog.Logger
 
-class DataStream:
+class DataStream(step: Int = 0):
+
     class timeData:
         var time: Tensor = _
         def getTime = time
@@ -58,12 +59,83 @@ class DataStream:
                 s += "\n" +"null"
             s
 
-    var enableX11 = true
-    var completeTimeSeries: Tensor = _
-    var timeDataStream = timeData()
-    var timePredictStream = timeData()
-    var timeParticleStream = timeData()
+/**
+    class timeData:
+        var time = scala.collection.mutable.ArrayBuffer.empty[Int]
+        def getTime = time
+        var data = scala.collection.mutable.ArrayBuffer.empty[Double]
+        def getData = data
+        var lastIndex = -1 // No data
+        def push(t: Tensor, d: Tensor) =
+          if lastIndex == -1 then
+            val dimension = d.shape(0).toInt
+            //println(d.reshape(1, d.shape(0).toInt))
+            if d.shape == Array(1L) then
+                data = d.reshape(1, d.shape(0).toInt)
+                //println(s"data=${data},${data.shape.toSeq}")
+                time = t.reshape(1, t.shape(0).toInt).dup
+                lastIndex = 0
+          else
+            //println(s"time push:${t} into ${time}")
+            //println(s"data push:${d}")
+            time.push(t)
+            //println(s"results=${time}")
+            data.push(d)
 
+          this
+        def multiplePush(t: Array[Int], d: Array[Double]): timeData =
+            multiplePush(Tensor(t), Tensor(d))
+
+        def multiplePush(t: Tensor, d: Tensor) =
+          if lastIndex == -1 then
+            val dimension = d.shape(0).toInt
+            //println(d.reshape(dimension, 1))
+            data = d.reshape(dimension, 1)
+            //println(s"dataStream=${data},${data.shape.toSeq}")
+            time = t.reshape(dimension, 1)
+            lastIndex = 0
+          else
+            time.multiplePush(t)
+            data.multiplePush(d)
+
+          this
+        override def toString() =
+            var s = ""
+            if time != null then
+                s += time.toString()
+            else
+                s += "null"
+            if data != null then
+                s += "\n" + data.toString()
+            else
+                s += "\n" +"null"
+            s
+  * */
+    val prop = readProperties
+    val numParticles = prop.get("NumParticles").asInstanceOf[Int]
+    var enableX11 = true
+    /**
+      * 欠損のない，0からデータの個数までの秒を表す数列
+      * */
+    var completeTimeSeries: Tensor = _
+    /**
+      * 入力データ
+      * */
+    var timeDataStream = timeData()
+    /**
+      * tuningを呼ぶとセットされる予測データ
+    * */
+    var timePredictStream = timeData()
+    /**
+      * tuningを呼ぶとセットされる粒子データ
+    * */
+    var timeParticleStream = timeData()
+    /**
+      * timeDataStreamに粒子フィルタを適用し，尤度最大になったデータを
+      * timePredictStreamとtimeParticleStreamにセットする．
+      * 結果の画像データも生成してs"ParticleFilter-${step}.png"として保存する．
+      * 予めcompleteTimeSeriesのセットが必要．
+     * */
     def tuning =
         //val systemNoiseParameterRange = 3
         //val observationNoiseParameterRange = 2
@@ -114,7 +186,8 @@ class DataStream:
           val dataIter = timeDataStream.getData.tensorIterator
           val startTime = timeIter.next()
           val startData = dataIter.next()
-          var x = Tensor.repeat(startData, 20)
+          Logger.debug("startData={}, numParticles={}", startData, numParticles)
+          var x = Tensor.repeat(startData, numParticles)
           var likelihood = 0.0
           val timePredictStreamCandidate = timeData()
           val timeParticleStreamCandidate = timeData()
@@ -206,6 +279,8 @@ class DataStream:
               timePredictStream = timePredictStreamCandidate
               timeParticleStream = timeParticleStreamCandidate
         Logger.info("optimizing results: {}, {}", selectedSystemModel, selectedObservationModel)
+        if enableX11 then
+            f.saveas(s"ParticleFilter-${step}.png")
 
     def timePredictStreamSampling(period: Double) =
         if timePredictStream.time.x == null then
