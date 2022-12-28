@@ -18,6 +18,8 @@ class BaseDistribution():
     dist.density(x(0)) // Multivariate version is not available
   def sample(): Tensor =
     Tensor(Array(dist.sample())) // Todo: Multivariate version is not available
+  def sample(shape: Array[Long]): Tensor =
+    Tensor(dist.sample(shape))
   def fill(n: Int): Seq[Double] =
     Seq.fill[Double](n)(dist.sample())
 

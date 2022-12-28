@@ -51,6 +51,16 @@ class TensorTest extends AnyFunSuite:
     assert(z9 == Tensor(1.0, 2.0, 3.0))
 
   }
+/*
+  test("1d like 2d tensor basic operation can be executed"){
+    val x = Tensor(Seq(Seq(1.0), Seq(2.0)))
+    val z = x + Tensor(Seq(Seq(3.0), Seq(4.0)))
+    assert(z == Tensor(Seq(Seq(4.0), Seq(6.0))))
+    val z1 = x + Seq(Seq(3.0), Seq(4.0))
+    assert(z1 == Tensor(Seq(Seq(4.0), Seq(6.0))))
+
+  }
+ */
   test("2d basic operation can be executed"){
     val x = Tensor(Seq(Seq(1.0, 2.0), Seq(3.0, 4.0)))
     x.outputNewLine = false
@@ -105,6 +115,20 @@ class TensorTest extends AnyFunSuite:
     val d = c/c.norm
 
     assert(d.==(Tensor(Array(0.0676, 0.2028, 0.3564, 0.5408, 0.7313))) (1e-4))
+    println(d)
+
+  }
+  test("statistical2d operation can be executed"){
+    val a = Tensor(Array(Array(1.1), Array(2.2), Array(2.5), Array(3.0), Array(3.1)))
+    val (bin, b) = a.histogram(3, 1.0, 4.0)
+    assert(bin.toString() == "[1.0000, 2.0000, 3.0000]")
+    assert(b.toString() == "[1.0000, 3.0000, 1.0000]")
+    assert(b == Tensor(Array(1.0000, 3.0000, 1.0000)))
+    val c = a.cummulativeValues()
+    assert(c == Tensor(Array(Array(1.1), Array(3.3), Array(5.8), Array(8.8), Array(11.9))))
+    val d = c/c.norm
+
+    assert(d.==(Tensor(Array(Array(0.0676), Array(0.2028), Array(0.3564), Array(0.5408), Array(0.7313)))) (1e-4))
     println(d)
 
   }

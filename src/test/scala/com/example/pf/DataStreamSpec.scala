@@ -9,6 +9,7 @@ import org.scalatest.flatspec.*
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.*
 
+import org.tinylog.Logger
 
 class DataStreamSpec extends AnyFunSuite with gui:
   test("datastream should be constructed") {
@@ -40,9 +41,9 @@ class DataStreamSpec extends AnyFunSuite with gui:
       f.refresh()
 
   }
-  test("datastream should be tuned") {
+  test("datastream should be tuned-light") {
       val ds = DataStream()
-      ds.enableX11 = false
+      ds.enableX11 = true
       assert(ds != null)
       ds.timeDataStream.push(Tensor(Array(0.0)), Tensor(Array(0.0)))
       ds.timeDataStream.push(Tensor(Array(1.0)), Tensor(Array(1.0)))
@@ -51,6 +52,20 @@ class DataStreamSpec extends AnyFunSuite with gui:
       assert(ds.timeDataStream.getData == Tensor(Array(Array(0.0), Array(1.0), Array(4.0), Array(0.5))))
       assert(ds.timeDataStream.getTime == Tensor(Array(Array(0.0), Array(1.0), Array(2.0), Array(3.0))))
       ds.completeTimeSeries = Tensor(Array(0.0, 1.0, 2.0, 3.0))
+      ds.tuning
+  }
+  test("datastream should be tuned-heavy") {
+      val ds = DataStream()
+      ds.enableX11 = true
+      assert(ds != null)
+      val timeSeries = Tensor.linspace(0.0, 10.0, 0.1)
+      Logger.tags("DEBUG").debug("Start pushing...", "")
+      //timeSeries.toArray.foreach{f =>
+      //    ds.timeDataStream.push(Tensor(Array(f)), Tensor(Array(f*f)))
+      //}
+      ds.timeDataStream.multiplePush(timeSeries, timeSeries * timeSeries)
+      Logger.tags("DEBUG").debug("End pushing...", "")
+      ds.completeTimeSeries = timeSeries
       ds.tuning
   }
   test("sampling should be performed") {

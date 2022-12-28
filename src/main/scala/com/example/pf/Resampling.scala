@@ -1,6 +1,9 @@
 package com.example.pf
 
 import scala.util.Random
+
+import org.tinylog.Logger
+
 class Resampling(seed: Int = 0):
   val rnd = new Random(seed)
   def multinomialResampling(x: Tensor, w: Tensor) =
@@ -22,13 +25,19 @@ class Resampling(seed: Int = 0):
       f => x(f.toLong)
     }
     p
+  // Assume input tensors have a shape of (n, 1)
   def systematicResampling(x: Tensor, w: Tensor) =
+    //Logger.tags("NOTICE", "DEBUG").debug("x={}, w={}", x, w)
+    if !x.shape.sameElements(w.shape) then
+        new RuntimeException(f"x shape(${x.shape.toSeq}) should equal to w.shape(${w.shape.toSeq})")
+    val shape = x.shape.map(f => f.toInt)
     val total = w.sum
     val n = w.length
     val cumulativeWeight = w.cummulativeValues()/total
-    //println(f"cumulativeWeight=${cumulativeWeight}")
+    //Logger.tags("NOTICE", "DEBUG").debug("cumulativeWeight={}",cumulativeWeight)
     val r0 = rnd.nextDouble() * 1.0/n
-    val samplingMap = Tensor(Range(0, n.toInt).toArray).map{
+    /*
+    val samplingMap = Tensor(Range(0, n.toInt).toArray).reshape(shape: _*).map{
       f =>
         val r = r0 + f/n
         val index = cumulativeWeight.indexWhere(g => g >= r)
@@ -37,6 +46,26 @@ class Resampling(seed: Int = 0):
     val p = samplingMap.map{
       f => x(f.toLong)
     }
+     */
+
+    val p = Tensor(Range(0, n.toInt).toArray).reshape(shape: _*).map{
+      f =>
+        val r = r0 + f/n
+        val index = cumulativeWeight.indexWhere(g => g >= r)
+        x(index.toLong)
+    }
+
+    /* あんまり変わんなかったからmapで
+    val p = Tensor(Range(0, n.toInt).toArray).reshape(shape: _*).mapi{
+      f =>
+        val r = r0 + f/n
+        val index = cumulativeWeight.indexWhere(g => g >= r)
+        x(index.toLong)
+    }
+     */
+    //Logger.tags("NOTICE").debug(f"x shape(${x.shape.toSeq}) should equal to p.shape(${p.shape.toSeq}) == {}", x.shape.sameElements(p.shape))
+    if !x.shape.sameElements(p.shape) then
+        throw new RuntimeException(f"x shape(${x.shape.toSeq}) should equal to p.shape(${p.shape.toSeq})")
     p
   def residualResampling(x: Tensor, w: Tensor) =
     val total = w.sum

@@ -10,6 +10,8 @@ import scala.annotation.targetName
 import scala.math
 import scala.reflect.ClassTag
 
+import scala.collection.parallel.CollectionConverters.*
+
 class Tensor:
   var x: INDArray = _
   var outputNewLine = true
@@ -116,6 +118,7 @@ class Tensor:
       this
       
   def cummulativeValues() =
+    /*
     val n = x.length
     val cumulativeWeight = scala.collection.mutable.ListBuffer.empty[Double]
     cumulativeWeight.append(x.getDouble(0L))
@@ -124,6 +127,8 @@ class Tensor:
     do
       cumulativeWeight.append(cumulativeWeight(i - 1) + x.getDouble(i.toLong))
     Tensor(cumulativeWeight.toArray)
+     */
+    Tensor(x.cumsum(0))
   def indexWhere(f: Double => Boolean) =
     x.toDoubleVector.indexWhere(f)
 
@@ -132,9 +137,27 @@ class Tensor:
     x.shape.length match
         case 1 =>
             Tensor(Nd4j.create(x.toDoubleVector.map(f)))
+            //Tensor(Nd4j.create(x.toDoubleVector.par.map(f).toArray))
+            //x = Nd4j.create(x.toDoubleVector.map(f))
+            ///this
         case 2 =>
             Tensor(Nd4j.create(x.toDoubleMatrix.map(g => g.map(f))))
-
+            //Tensor(Nd4j.create(x.toDoubleMatrix.par.map(g => g.map(f)).toArray))
+            //x = Nd4j.create(x.toDoubleMatrix.map(g => g.map(f)))
+            //this
+  // for 1D and 2D
+  def mapi(f: Double => Double) =
+    x.shape.length match
+        case 1 =>
+            //Tensor(Nd4j.create(x.toDoubleVector.map(f)))
+            //Tensor(Nd4j.create(x.toDoubleVector.par.map(f).toArray))
+            x = Nd4j.create(x.toDoubleVector.map(f))
+            this
+        case 2 =>
+            //Tensor(Nd4j.create(x.toDoubleMatrix.map(g => g.map(f))))
+            //Tensor(Nd4j.create(x.toDoubleMatrix.par.map(g => g.map(f)).toArray))
+            x = Nd4j.create(x.toDoubleMatrix.map(g => g.map(f)))
+            this
 
 
   def filter(f: Double => Boolean) =
@@ -189,7 +212,8 @@ class Tensor:
             out = out + ", "
             if outputNewLine then
               out = out + "\n"
-    out = out + "]"
+    //out = out + s"](${shape.toSeq})"
+    out = out + s"]"
     out
   def ==(y: Tensor)(implicit eps: Double = 1e-8): Boolean =
     x.equalsWithEps(y.x, eps)
@@ -211,6 +235,7 @@ class Tensor:
 
 extension (x: Tensor)
   def +(y: Tensor): Tensor = Tensor(x.x.add(y.x))
+  def +(y: Seq[Double]): Tensor = Tensor(x.x.add(Nd4j.create(y.toArray)))
   def ++(y: Tensor): Tensor = Tensor(Nd4j.hstack(x.x, y.x))
   def +(y: Number): Tensor = Tensor(x.x.add(y))
   def -(y: Tensor): Tensor = Tensor(x.x.sub(y.x))
@@ -218,6 +243,7 @@ extension (x: Tensor)
   def dot(y: Tensor): Tensor = Tensor(x.x.mmul(y.x))
   //def *(y: com.example.pf.Tensor): com.example.pf.Tensor = com.example.pf.Tensor(x.x.mul(y.x))
   def *(y: Number): Tensor = Tensor(x.x.mul(y))
+  def *(y: Tensor): Tensor = Tensor(x.x.mul(y.x))
   def norm: Double = x.x.norm2Number().doubleValue()
 
 extension (x: Number)

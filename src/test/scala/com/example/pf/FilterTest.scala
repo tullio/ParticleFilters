@@ -14,6 +14,7 @@ import com.example.pf.model._
 import com.example.pf.distribution._
 import org.jfree.chart.annotations.XYTextAnnotation
 import org.scalatest.tagobjects.CPU
+import org.tinylog.Logger
 
 class FilterTest extends AnyFunSuite with gui:
   test("Linear Filter Elements", CPU) {
@@ -245,3 +246,75 @@ class FilterTest extends AnyFunSuite with gui:
     //f.refresh()
   }
 
+  test("Heavy Parameter TuningTest") {
+    //val idx = Tensor(Array(0.0, 1.0, 2.0, 3.0))
+    //val idx = Tensor.linspace(0.0, 3.0, 0.01)
+    val idx = Tensor.linspace(0.0, 3.0, 0.01)
+    //val ySeriese = Tensor(Array(1.0, 1.2, 2.0, 0.9))
+    //val ySeriese = Tensor(Array(1.0, 1.2, 1.3, 0.9))
+    val ySeriese = idx * idx // y = x^2
+    var f: Figure = null
+    var p0: Plot = null
+    if enableX11 then
+      f = Figure(s"Particle filter")
+      f.width = 1480
+      f.height = 740
+
+    val systemNoiseParameterRange = 1
+    val observationNoiseParameterRange = 1
+
+    for
+      i <- Range(-systemNoiseParameterRange, systemNoiseParameterRange, 1)
+
+      j <- Range(-observationNoiseParameterRange, observationNoiseParameterRange, 1)
+    do
+      val a = 4.0*math.pow(2.0, i) // variance of noise of the system model
+      val b = 4.0*math.pow(2.0, j) // variance of noise of the observation model
+      println(s"========================================== (a=${a}, b=${b})")
+      if enableX11 then
+        p0 = f.subplot(systemNoiseParameterRange*2, observationNoiseParameterRange*2,
+          (i+systemNoiseParameterRange)*(observationNoiseParameterRange*2)+(j+observationNoiseParameterRange))
+        //p0.title = s"a=${a}, b=${b}"
+        //val p1 = f.subplot(1, 2, 1)
+        p0.legend = true
+        p0 += plot(idx.toArray, ySeriese.toArray, name = "Input")
+      val systemModel = new LinearGaussianSystemModel(0.0, a)
+      val inversedObservationModel = new LinearGaussianObservationModel(0.0, b)
+      val filter = new ParticleFilter(systemModel, inversedObservationModel)
+      filter.debug = true
+      var x = Tensor.repeat(ySeriese(0), 1000)
+      val it = idx.drop(1).doubleIterator
+      var likelihood = 0.0
+      val plotX = scala.collection.mutable.ArrayBuffer.empty[Double]
+      val plotY = scala.collection.mutable.ArrayBuffer.empty[Double]
+      val predictPlotX = scala.collection.mutable.ArrayBuffer.empty[Double]
+      val predictPlotY = scala.collection.mutable.ArrayBuffer.empty[Double]
+      ySeriese.toArray.drop(1).foreach { f =>
+        x = filter.step(x, Tensor(Array(f)))
+        //Logger.info("step x={}", x)
+        val t0 = it.next()
+        val t = Tensor.repeat(t0, x.length.toInt)
+        val predict = x.mean(0)
+        if enableX11 then
+          plotX ++= t.toArray
+          plotY ++= x.toArray
+          predictPlotX += t0
+          predictPlotY += predict
+
+            //println(s"mean=${predict}")
+            val l = filter.logLikelihood
+            //println(s"logLikelyhood=${l}(a=${a}, b=${b})")
+            likelihood += l
+      }
+      if enableX11 then
+          p0 += plot(plotX, plotY, name = "predict particle", style = '.')
+          p0 += plot(predictPlotX, predictPlotY,  name = "predict value", style = '+', colorcode = "[255,0,0]")
+      Logger.info("logLikelyhood={}(a={}, b={})", likelihood, a, b)
+      val text = s"logLikelyhood=${likelihood}(a=${a}, b=${b})"
+      val annotation = new XYTextAnnotation(text, 500, 500)
+      annotation.setFont(annotation.getFont().deriveFont(24f))
+      if enableX11 then
+        p0.title = s"a=${a}, b=${b}, l=${likelihood}"
+        p0.plot.addAnnotation(annotation)
+    //f.refresh()
+  }
