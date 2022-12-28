@@ -15,6 +15,9 @@ lazy val root = project
 
     scalaVersion := scala3Version,
 
+    libraryDependencies +=
+      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
+
     libraryDependencies += "org.nd4j" % "nd4j-api" % "1.0.0-M1.1",
     libraryDependencies += "org.nd4j" % "nd4j" % "1.0.0-M1.1",
     libraryDependencies += "org.nd4j" % "nd4j-backend-impls" % "1.0.0-M1.1",
@@ -24,7 +27,7 @@ lazy val root = project
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test",
     //libraryDependencies += "org.scalanlp" %% "breeze-viz" % "2.0-RC3",
     libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.8",
-    libraryDependencies += "org.tinylog" % "tinylog" % "1.3.6",
+    //libraryDependencies += "org.tinylog" % "tinylog" % "1.3.6",
     libraryDependencies += "org.tinylog" % "tinylog-api" % "2.5.0",
     libraryDependencies += "org.tinylog" % "tinylog-impl" % "2.5.0",
     libraryDependencies += "com.electronwill.night-config" %  "toml" % "3.6.5",
@@ -32,7 +35,7 @@ lazy val root = project
     libraryDependencies += "com.github.nscala-time" %% "nscala-time" % "2.30.0",
     libraryDependencies += "ai.djl" % "api" % "0.19.0",
     libraryDependencies += "ai.djl.mxnet" % "mxnet-engine" % "0.19.0",
-
+    libraryDependencies += "com.github.psambit9791" % "jdsp" % "1.0.0",
   )
 assemblyMergeStrategy in assembly := {
     case PathList("javax", "servlet", xs @ _*)         => MergeStrategy.first
